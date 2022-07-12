@@ -1,0 +1,29 @@
+FROM alpine:3.16.0 as aria2
+
+RUN apk add --no-cache \
+    build-base \
+    ca-certificates \
+    gnutls-dev \
+    expat-dev \
+    sqlite-dev \
+    c-ares-dev \
+    cppunit-dev
+
+WORKDIR /opt
+
+RUN wget https://distfiles.alpinelinux.org/distfiles/edge/aria2-1.36.0.tar.xz && \
+         tar -xvf aria2-1.36.0.tar.xz
+
+WORKDIR /opt/aria2-1.36.0
+
+RUN sed -i 's/1, 16, /1, 128, /g' src/OptionHandlerFactory.cc
+
+RUN ./configure && \
+   make && \
+   make install
+
+RUN rm -rf /opt/aria2-1.36.0
+
+FROM alpine:3.16.0
+
+COPY --from=aria2 /usr/local/bin/aria2c /usr/local/bin/aria2c
